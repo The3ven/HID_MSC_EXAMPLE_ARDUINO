@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <src/hid_msc/esp_hid_msc_host.h>
-
+#include "USB_Keyboard.h"
 /* GPIO Pin number for quit from example logic */
 
 #define P1 46
@@ -149,5 +149,6 @@ void hub_on();
 void msc_setup(void);
 void app_main(void);
 bool wait_for_app_quit(long int timeout);
+esp_err_t sendHIDReport(hid_host_device_handle_t hid_dev_handle, uint8_t report_type, uint8_t report_id, uint8_t *report, size_t report_length);
 
 #endif

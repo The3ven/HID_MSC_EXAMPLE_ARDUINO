@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "map": "cpp",
+        "xtree": "cpp",
+        "utility": "cpp"
     }
 }

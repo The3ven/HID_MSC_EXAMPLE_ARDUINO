@@ -119,12 +119,19 @@ static void key_event_callback(key_event_t *key_event)
 
     if (key_event->KEY_STATE_PRESSED == key_event->state)
     {
-        if (hid_keyboard_get_char(key_event->modifier, key_event->key_code,
-                                  &key_char))
-        {
+        hid_keyboard_get_char(key_event->modifier, key_event->key_code,
+                              &key_char);
 
-            hid_keyboard_print_char(key_char);
-        }
+        // Serial.println("[" + String(__FUNCTION__) + "] : " + "key_char: " + String(key_char));
+        // Serial.println("[" + String(__FUNCTION__) + "] : " + "modifier: " + String(key_event->modifier));
+        // Serial.println("[" + String(__FUNCTION__) + "] : " + "key_code: " + String(key_event->key_code));
+
+        onKeyboardKey(key_char, key_event->key_code, key_event->modifier);
+
+        // {
+
+        //     hid_keyboard_print_char(key_char);
+        // }
     }
 }
 
@@ -372,8 +379,7 @@ static void usb_lib_task(void *arg)
     while (digitalRead(APP_QUIT_PIN) != 0)
     {
         uint32_t event_flags;
-        usb_host_lib_handle_events(100, &event_flags);
-
+        esp_err_t err = usb_host_lib_handle_events(100, &event_flags);
         // Release devices once all clients has deregistered
         if (event_flags & USB_HOST_LIB_EVENT_FLAGS_NO_CLIENTS)
         {
@@ -401,6 +407,11 @@ static void usb_lib_task(void *arg)
     cusb_task.status = false;
 
     vTaskDelete(NULL);
+}
+
+esp_err_t sendHIDReport(hid_host_device_handle_t hid_dev_handle, uint8_t report_type, uint8_t report_id, uint8_t *report, size_t report_length)
+{
+    return hid_class_request_set_report(hid_dev_handle, report_type, report_id, report, report_length);
 }
 
 /**
