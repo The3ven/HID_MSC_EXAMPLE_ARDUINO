@@ -6,6 +6,7 @@ bool Hid_disconnected = false;
 const char *TAG = "example";
 QueueHandle_t hid_host_event_queue;
 bool user_shutdown = false;
+hid_host_device_handle_t my_keyboard_dev = nullptr;
 
 usb_tasks cusb_task = {usb_tasks::HID, false};
 
@@ -343,6 +344,7 @@ void hid_host_device_event(hid_host_device_handle_t hid_device_handle,
                  hid_proto_name_str[dev_params.proto]);
 
         ESP_ERROR_CHECK(hid_host_device_open(hid_device_handle, &dev_config));
+        my_keyboard_dev = hid_device_handle;
         if (HID_SUBCLASS_BOOT_INTERFACE == dev_params.sub_class)
         {
             ESP_ERROR_CHECK(hid_class_request_set_protocol(hid_device_handle,
@@ -409,9 +411,23 @@ static void usb_lib_task(void *arg)
     vTaskDelete(NULL);
 }
 
-esp_err_t sendHIDReport(hid_host_device_handle_t hid_dev_handle, uint8_t report_type, uint8_t report_id, uint8_t *report, size_t report_length)
+esp_err_t sendHIDReport(uint8_t led_state)
 {
-    return hid_class_request_set_report(hid_dev_handle, report_type, report_id, report, report_length);
+    if (my_keyboard_dev != nullptr)
+    {
+
+        return hid_class_request_set_report(
+            my_keyboard_dev,
+            HID_REPORT_TYPE_OUTPUT,  // Output report
+            0,                       // Usually Report ID 0
+            &led_state,
+            1                        // 1 byte
+        );
+    }
+    else
+    {
+        return ESP_ERR_INVALID_STATE;
+    }
 }
 
 /**

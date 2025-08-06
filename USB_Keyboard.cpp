@@ -10,6 +10,8 @@ bool CAPS_LOCK = false;
 bool NUM_LOCK = false;
 bool SCROLL_LOCK = false;
 
+extern esp_err_t sendHIDReport(uint8_t led_state);
+
 /* Lookup tables for key mappings */
 struct KeyMapping
 {
@@ -90,9 +92,18 @@ void handleSpecialKey(uint8_t keycode, uint8_t modifier)
 {
   switch (keycode)
   {
-    case 57: CAPS_LOCK = !CAPS_LOCK; return;
-    case 71: SCROLL_LOCK = !SCROLL_LOCK; return;
-    case 83: NUM_LOCK = !NUM_LOCK; return;
+    case 57: 
+    CAPS_LOCK = !CAPS_LOCK; 
+    setKeyboardLED();
+    return;
+    case 71:
+    SCROLL_LOCK = !SCROLL_LOCK;
+    setKeyboardLED();
+    return;
+    case 83:
+    NUM_LOCK = !NUM_LOCK;
+    setKeyboardLED();
+    return;
   }
 
   if (keycode == 59)
@@ -279,76 +290,80 @@ void Keyboard_input_checker(uint16_t key)
   }
 }
 
+uint8_t get_led_state_byte()
+{
+    uint8_t state = 0;
+    if (NUM_LOCK)    state |= (1 << 0);
+    if (CAPS_LOCK)   state |= (1 << 1);
+    if (SCROLL_LOCK) state |= (1 << 2);
+    return state;
+}
+
+
 bool setKeyboardLED()
 {
 
-  uint8_t ledMask;
+  // uint8_t ledMask;
 
-  // Combination 1: All OFF
-  if (!CAPS_LOCK && !NUM_LOCK && !SCROLL_LOCK) {
-    ledMask = 0x00;
-  }
+  // // Combination 1: All OFF
+  // if (!CAPS_LOCK && !NUM_LOCK && !SCROLL_LOCK) {
+  //   ledMask = 0x00;
+  // }
 
-  // Combination 2: Only SCROLL_LOCK ON
-  if (!CAPS_LOCK && !NUM_LOCK && SCROLL_LOCK) {
-    ledMask = LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
-  }
+  // // Combination 2: Only SCROLL_LOCK ON
+  // if (!CAPS_LOCK && !NUM_LOCK && SCROLL_LOCK) {
+  //   ledMask = LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
+  // }
 
-  // Combination 3: Only NUM_LOCK ON
-  if (!CAPS_LOCK && NUM_LOCK && !SCROLL_LOCK) {
-    ledMask = LED_NUM_LOCK; // Both CAPS LOCK and NUM LOCK are on
+  // // Combination 3: Only NUM_LOCK ON
+  // if (!CAPS_LOCK && NUM_LOCK && !SCROLL_LOCK) {
+  //   ledMask = LED_NUM_LOCK; // Both CAPS LOCK and NUM LOCK are on
 
-  }
+  // }
 
-  // Combination 4: NUM_LOCK + SCROLL_LOCK ON
-  if (!CAPS_LOCK && NUM_LOCK && SCROLL_LOCK) {
-    ledMask = LED_NUM_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
+  // // Combination 4: NUM_LOCK + SCROLL_LOCK ON
+  // if (!CAPS_LOCK && NUM_LOCK && SCROLL_LOCK) {
+  //   ledMask = LED_NUM_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
 
-  }
+  // }
 
-  // Combination 5: Only CAPS_LOCK ON
-  if (CAPS_LOCK && !NUM_LOCK && !SCROLL_LOCK) {
-    ledMask = LED_CAPS_LOCK; // Both CAPS LOCK and NUM LOCK are on
+  // // Combination 5: Only CAPS_LOCK ON
+  // if (CAPS_LOCK && !NUM_LOCK && !SCROLL_LOCK) {
+  //   ledMask = LED_CAPS_LOCK; // Both CAPS LOCK and NUM LOCK are on
 
-  }
+  // }
 
-  // Combination 6: CAPS_LOCK + SCROLL_LOCK ON
-  if (CAPS_LOCK && !NUM_LOCK && SCROLL_LOCK)
-  {
-    ledMask = LED_CAPS_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
-  }
+  // // Combination 6: CAPS_LOCK + SCROLL_LOCK ON
+  // if (CAPS_LOCK && !NUM_LOCK && SCROLL_LOCK)
+  // {
+  //   ledMask = LED_CAPS_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
+  // }
 
-  // Combination 7: CAPS_LOCK + NUM_LOCK ON
-  if (CAPS_LOCK && NUM_LOCK && !SCROLL_LOCK)
-  {
-    ledMask = LED_CAPS_LOCK | LED_NUM_LOCK; // Both CAPS LOCK and NUM LOCK are on
-  }
+  // // Combination 7: CAPS_LOCK + NUM_LOCK ON
+  // if (CAPS_LOCK && NUM_LOCK && !SCROLL_LOCK)
+  // {
+  //   ledMask = LED_CAPS_LOCK | LED_NUM_LOCK; // Both CAPS LOCK and NUM LOCK are on
+  // }
 
-  // Combination 8: All ON
-  if (CAPS_LOCK && NUM_LOCK && SCROLL_LOCK)
-  {
-    ledMask = LED_CAPS_LOCK | LED_NUM_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
-  }
+  // // Combination 8: All ON
+  // if (CAPS_LOCK && NUM_LOCK && SCROLL_LOCK)
+  // {
+  //   ledMask = LED_CAPS_LOCK | LED_NUM_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
+  // }
+
+  uint8_t led_state = get_led_state_byte();
 
 
-
-
-
-  uint8_t bmRequestType = 0x21;                // Host-to-device, Class, Interface
-  uint8_t bRequest = 0x09;                     // SET_REPORT
-  uint16_t wValue = (0x02 << 8) | 0x00;        // Report Type (Output) and Report ID
-  uint16_t wIndex = usbHost._bInterfaceNumber; // Use the correct interface number
-  uint8_t report[1] = {ledMask};       // Report data containing the LED mask
   esp_err_t err;
   bool resp = false;
 
   int retries = 3;
   while (retries-- > 0)
   {
-    err = sendHIDReport(bmRequestType, bRequest, wValue, wIndex, report, sizeof(report));
+    err = sendHIDReport(led_state);
     if (err == ESP_OK)
     {
-      Serial.printf("Set LED mask: 0x%02X\n", report);
+      Serial.printf("Set LED mask: 0x%02X\n", led_state);
       resp = true; // Successfully set the LED state
       break;      // Exit the loop on success
     }
@@ -363,7 +378,6 @@ bool setKeyboardLED()
   if (err == ESP_ERR_INVALID_STATE)
   {
     Serial.println("USB pipe is not in an active state. Resetting pipe...");
-    usbHost.task(); // Perform a task to reset the pipe
     resp = false;
   }
 

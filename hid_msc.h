@@ -149,6 +149,6 @@ void hub_on();
 void msc_setup(void);
 void app_main(void);
 bool wait_for_app_quit(long int timeout);
-esp_err_t sendHIDReport(hid_host_device_handle_t hid_dev_handle, uint8_t report_type, uint8_t report_id, uint8_t *report, size_t report_length);
+esp_err_t sendHIDReport(uint8_t led_state);
 
 #endif

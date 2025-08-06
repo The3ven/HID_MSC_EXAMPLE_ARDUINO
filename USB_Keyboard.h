@@ -37,6 +37,7 @@
   // bool setKeyboardLED();
   void onKeyboardKey(uint8_t ascii, uint8_t keycode, uint8_t modifier);
   void Keyboard_input_checker(uint16_t keyCode);
+  bool setKeyboardLED();
 #endif
 
 /* --------------------------------------------------------------------------------------------------- */
