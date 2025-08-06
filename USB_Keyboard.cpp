@@ -12,13 +12,6 @@ bool SCROLL_LOCK = false;
 
 extern esp_err_t sendHIDReport(uint8_t led_state);
 
-/* Lookup tables for key mappings */
-struct KeyMapping
-{
-  uint8_t keycode;
-  uint16_t value;
-};
-
 // Special keys (ascii == 0)
 const std::map<uint8_t, uint16_t> specialKeyMap =
 {
@@ -73,7 +66,8 @@ const std::map<uint8_t, uint16_t> specialKeyMap =
 };
 
 const std::map<std::pair<uint8_t, uint8_t>, uint16_t> asciiKeyOverrides = {
-  {{13, 40}, ENTER}
+  {{13, 40}, ENTER},
+  {{8, 42}, BACK_KEY}
 };
 
 const std::map<uint16_t, uint16_t> numpadOverrideMap =
@@ -205,6 +199,9 @@ void Keyboard_input_checker(uint16_t key)
   {
     switch(key)
     {
+      case BACK_KEY:
+        Serial.println("User pressed BACK_KEY");
+        break;
       case TAB:
         Serial.println("User pressed TAB");
         break;
@@ -302,55 +299,6 @@ uint8_t get_led_state_byte()
 
 bool setKeyboardLED()
 {
-
-  // uint8_t ledMask;
-
-  // // Combination 1: All OFF
-  // if (!CAPS_LOCK && !NUM_LOCK && !SCROLL_LOCK) {
-  //   ledMask = 0x00;
-  // }
-
-  // // Combination 2: Only SCROLL_LOCK ON
-  // if (!CAPS_LOCK && !NUM_LOCK && SCROLL_LOCK) {
-  //   ledMask = LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
-  // }
-
-  // // Combination 3: Only NUM_LOCK ON
-  // if (!CAPS_LOCK && NUM_LOCK && !SCROLL_LOCK) {
-  //   ledMask = LED_NUM_LOCK; // Both CAPS LOCK and NUM LOCK are on
-
-  // }
-
-  // // Combination 4: NUM_LOCK + SCROLL_LOCK ON
-  // if (!CAPS_LOCK && NUM_LOCK && SCROLL_LOCK) {
-  //   ledMask = LED_NUM_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
-
-  // }
-
-  // // Combination 5: Only CAPS_LOCK ON
-  // if (CAPS_LOCK && !NUM_LOCK && !SCROLL_LOCK) {
-  //   ledMask = LED_CAPS_LOCK; // Both CAPS LOCK and NUM LOCK are on
-
-  // }
-
-  // // Combination 6: CAPS_LOCK + SCROLL_LOCK ON
-  // if (CAPS_LOCK && !NUM_LOCK && SCROLL_LOCK)
-  // {
-  //   ledMask = LED_CAPS_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
-  // }
-
-  // // Combination 7: CAPS_LOCK + NUM_LOCK ON
-  // if (CAPS_LOCK && NUM_LOCK && !SCROLL_LOCK)
-  // {
-  //   ledMask = LED_CAPS_LOCK | LED_NUM_LOCK; // Both CAPS LOCK and NUM LOCK are on
-  // }
-
-  // // Combination 8: All ON
-  // if (CAPS_LOCK && NUM_LOCK && SCROLL_LOCK)
-  // {
-  //   ledMask = LED_CAPS_LOCK | LED_NUM_LOCK | LED_SCROLL_LOCK; // Both CAPS LOCK and NUM LOCK are on
-  // }
-
   uint8_t led_state = get_led_state_byte();
 
 
